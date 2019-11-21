@@ -15,6 +15,24 @@ class Lfu(AbstractImplementation):
             self.hit += 1
             self.cache_index[key][-1][1] += 1
 
+    def __str__(self):
+        layout = "{:<5}|{:<30}|{}"
+        title = layout.format("index", "items", "usage")
+        result = "\n".join([
+            "Hit: {}".format(self.hit),
+            "Compulsory miss: {}".format(self.compulsory_miss),
+            "Conflic miss: {}".format(self.conflict_miss)
+            ])
+        d = {}
+        usage = []
+        for key, lines in self.cache_index.items():
+            d[key] = []
+            for value in lines:
+                d[key].append(value[0])
+            usage.append(lines[-1][1])
+        
+        return "\n" + "\n".join([title] + [layout.format(key, ", ".join(value), usage[key]) for key, value in d.items()] + [result])
+
     def substitution_algorithm(self, item: str):
         d = {}
         key = 0
