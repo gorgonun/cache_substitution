@@ -15,13 +15,17 @@ class AbstractImplementation(ABC):
         self.conflict_miss = 0
 
     def process(self, item: str):
-        if not self.check_cache(item):
+        key = self.check_cache(item)
+        if key is None:
             self.insert_into_cache(item)
         else:
             self.hit += 1
 
     def check_cache(self, item: str):
-        return item in [values[-1] for values in self.cache_index.values()]
+        d = self.valueDict()
+        for key, value in d.items():
+            if item == value[-1]:
+                return key
 
     @abstractmethod
     def substitution_algorithm(self, item: str):
@@ -41,17 +45,26 @@ class AbstractImplementation(ABC):
 
     def append_to_cache(self, item: str):
         index = len(self.cache_index.keys())
-        self.cache_index[index] = [item]
+        self.cache_index[index] = [[item, 0]]
         self.compulsory_miss += 1
         
     def substitute_in_cache(self, old_item: str, index: int, item: str):
-        self.cache_index = index, item
+        self.cache_index[index] += [item, 0]
     
     def miss(self, item):
-        if item not in [value for values in self.cache_index.values() for value in values]:
+        d = self.valueDict()
+        if item not in [value for values in d.values() for value in values]:
             self.compulsory_miss += 1
         else:
             self.conflict_miss += 1
+    
+    def valueDict(self):
+        d = {}
+        for key, lines in self.cache_index.items():
+            d[key] = []
+            for value in lines:
+                d[key].append(value[0])
+        return d
 
     def __str__(self):
         layout = "{:<5}|{}"
@@ -61,5 +74,6 @@ class AbstractImplementation(ABC):
             "Compulsory miss: {}".format(self.compulsory_miss),
             "Conflic miss: {}".format(self.conflict_miss)
             ])
-        return "\n" + "\n".join([title] + [layout.format(key, ", ".join(value)) for key, value in self.cache_index.items()] + [result])
+        d = self.valueDict()
+        return "\n" + "\n".join([title] + [layout.format(key, ", ".join(value)) for key, value in d.items()] + [result])
         
